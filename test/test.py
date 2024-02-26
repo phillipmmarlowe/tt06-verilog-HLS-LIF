@@ -1,32 +1,62 @@
-# SPDX-FileCopyrightText: © 2023 Uri Shaked <uri@tinytapeout.com>
-# SPDX-License-Identifier: MIT
-
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
+from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
+
+
 
 @cocotb.test()
-async def test_adder(dut):
-  dut._log.info("Start")
-  
-  # Our example module doesn't use clock and reset, but we show how to use them here anyway.
-  clock = Clock(dut.clk, 10, units="us")
-  cocotb.start_soon(clock.start())
+async def test_lfi(dut):
+    CURRENT = 200
 
-  # Reset
-  dut._log.info("Reset")
-  dut.ena.value = 1
-  dut.ui_in.value = 0
-  dut.uio_in.value = 0
-  dut.rst_n.value = 0
-  await ClockCycles(dut.clk, 10)
-  dut.rst_n.value = 1
+    dut._log.info("starting simulation")
+    clock = Clock(dut.clk, 1, units="ns")
+    cocotb.start_soon(clock.start())
 
-  # Set the input values, wait one clock cycle, and check the output
-  dut._log.info("Test")
-  dut.ui_in.value = 20
-  dut.uio_in.value = 30
+    # reset
+    dut._log.info("reset")
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.rst_n.value = 1
+    # shouldn't be needed
+    #dut.ena.value = 1
+    dut.ui_in.value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.ui_in.value = CURRENT
+    for i in range(100):
+        if (i%2 == 0):
+            dut.ui_in.value = 125
+        else:
+            dut.ui_in.value = CURRENT
+        await ClockCycles(dut.clk, 10)
+    dut._log.info("test done")
 
-  await ClockCycles(dut.clk, 1)
 
-  assert dut.uo_out.value == 50
+
+'''
+    # the compare value is shifted 10 bits inside the design to allow slower counting
+    max_count = dut.ui_in.value << 10
+    dut._log.info(f"check all segments with MAX_COUNT set to {max_count}")
+    # check all segments and roll over
+    for i in range(15):
+        dut._log.info("check segment {}".format(i))
+        await ClockCycles(dut.clk, max_count)
+        assert int(dut.segments.value) == segments[i % 10]
+
+        # all bidirectionals are set to output
+        assert dut.uio_oe == 0xFF
+
+    # reset
+    dut.rst_n.value = 0
+    # set a different compare value
+    dut.ui_in.value = 3
+    await ClockCycles(dut.clk, 10)
+    dut.rst_n.value = 1
+
+    max_count = dut.ui_in.value << 10
+    dut._log.info(f"check all segments with MAX_COUNT set to {max_count}")
+    # check all segments and roll over
+    for i in range(15):
+        dut._log.info("check segment {}".format(i))
+        await ClockCycles(dut.clk, max_count)
+        assert int(dut.segments.value) == segments[i % 10]
+'''
