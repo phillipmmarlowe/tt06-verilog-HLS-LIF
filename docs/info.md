@@ -9,12 +9,14 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+Given some input current, the neuron's membrane potential will change and 
+if a threshold is met, the trigger output goes high.
 
 ## How to test
 
-Explain how to use your project
+Run the cocotb test and in gtkwave or something else, view the output bits and 
+look for a trigger toggle given your input
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+None, other than maybe some way of inputting current and reading output (power supply and oscilloscope)
